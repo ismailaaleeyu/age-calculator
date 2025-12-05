@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Age Calculator</title>
+  <style>
+    :root{
+      --bg:#f7f9fc;
+      --card:#ffffff;
+      --accent:#1f7aef;
+      --muted:#6b7280;
+      --radius:14px;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background:linear-gradient(180deg,#e9f0ff 0%, var(--bg) 100%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      color:#111827;
+    }
+    .card{
+      width:100%;
+      max-width:520px;
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:0 8px 30px rgba(17,24,39,0.08);
+      padding:20px;
+      box-sizing:border-box;
+    }
+    h1{margin:0 0 6px;font-size:20px;}
+    p.lead{margin:0 0 16px;color:var(--muted);font-size:14px;}
+    .row{display:flex;gap:10px;margin-bottom:12px;}
+    .row .col{flex:1;}
+    input[type="number"], input[type="date"], select{
+      width:100%;
+      padding:12px;
+      box-sizing:border-box;
+      border-radius:10px;
+      border:1px solid #e6eefb;
+      font-size:15px;
+      background:#fbfdff;
+    }
+    button{
+      width:100%;
+      padding:12px;
+      font-size:16px;
+      border-radius:10px;
+      border:0;
+      background:var(--accent);
+      color:white;
+      cursor:pointer;
+    }
+    .result{
+      margin-top:16px;
+      padding:12px;
+      border-radius:10px;
+      background:linear-gradient(180deg, #f8fbff, #ffffff);
+      border:1px solid #eef6ff;
+    }
+    .big{font-weight:700;font-size:18px;}
+    .muted{color:var(--muted);font-size:13px}
+    .small{font-size:13px;color:var(--muted)}
+    footer{margin-top:12px;text-align:center;color:var(--muted);font-size:12px}
+    .flex {display:flex; gap:8px; align-items:center;}
+    @media (max-width:420px){
+      .row{flex-direction:column;}
+      h1{font-size:18px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="app">
+    <h1>Age Calculator</h1>
+    <p class="lead">Enter your date of birth and tap Calculate. Works offline.</p>
+
+    <!-- Option A: Single date input (preferred on mobile) -->
+    <label class="small">Date of birth</label>
+    <input id="dob" type="date" placeholder="YYYY-MM-DD" />
+
+    <!-- Or Option B: separate inputs (uncomment if you prefer) -->
+    <!--
+    <div class="row">
+      <div class="col"><input id="year" type="number" min="1900" max="2100" placeholder="Year (e.g. 1990)"></div>
+      <div class="col"><input id="month" type="number" min="1" max="12" placeholder="Month (1-12)"></div>
+      <div class="col"><input id="day" type="number" min="1" max="31" placeholder="Day (1-31)"></div>
+    </div>
+    -->
+
+    <div style="height:8px"></div>
+    <button id="calcBtn">Calculate Age</button>
+
+    <div class="result" id="result" aria-live="polite" style="display:none;">
+      <div id="ageText" class="big"></div>
+      <div id="detail" class="muted small" style="margin-top:8px"></div>
+      <hr style="margin:12px 0;border:none;border-top:1px solid #f1f7ff"/>
+      <div id="nextBirthday" class="small"></div>
+    </div>
+
+    <footer>Made with ❤️ — copy & customize for your app</footer>
+  </div>
+
+  <script>
+    // Utility: return days in a month for year/month (month is 1-12)
+    function daysInMonth(year, month){
+      return new Date(year, month, 0).getDate();
+    }
+
+    function calculateAgeFromDate(birthDate){
+      // birthDate is a Date object
+      const today = new Date();
+      // normalize times to midnight to avoid tz edge cases
+      const tY = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const bY = new Date(birthDate.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+
+      if (bY > tY) {
+        return {error: "Birthdate is in the future."};
+      }
+
+      let years = tY.getFullYear() - bY.getFullYear();
+      let months = tY.getMonth() - bY.getMonth(); // 0-based
+      let days = tY.getDate() - bY.getDate();
+
+      if (days < 0) {
+        // borrow days from previous month
+        const prevMonth = (tY.getMonth() === 0) ? 12 : tY.getMonth(); // 1-12
+        const prevYear = (tY.getMonth() === 0) ? tY.getFullYear() - 1 : tY.getFullYear();
+        days += daysInMonth(prevYear, prevMonth);
+        months -= 1;
+      }
+
+      if (months < 0) {
+        months += 12;
+        years -= 1;
+      }
+
+      return {years, months, days};
+    }
+
+    // next birthday countdown:
+    function nextBirthdayInfo(birthDate){
+      const today = new Date();
+      const year = today.getFullYear();
+      let next = new Date(year, birthDate.getMonth(), birthDate.getDate());
+      if (next < new Date(year, today.getMonth(), today.getDate())) {
+        next = new Date(year + 1, birthDate.getMonth(), birthDate.getDate());
+      }
+      // if born Feb 29 and next year not leap, set to Mar 1
+      if (birthDate.getMonth() === 1 && birthDate.getDate() === 29) {
+        const ny = next.getFullYear();
+        if (!( (ny % 4 === 0 && ny % 100 !== 0) || (ny % 400 === 0) )) {
+          next = new Date(ny, 2, 1); // March 1
+        }
+      }
+
+      const diffMs = next - new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const oneDay = 24*60*60*1000;
+      const days = Math.round(diffMs / oneDay);
+
+      // countdown in months/days estimation
+      let months = next.getMonth() - today.getMonth() + (12 * (next.getFullYear() - today.getFullYear()));
+      if (next.getDate() < today.getDate()) months -= 1;
+      if (months < 0) months = 0;
+
+      return {nextDate: next, daysAway: days, monthsAway: months};
+    }
+
+    // DOM wiring
+    const dobInput = document.getElementById('dob');
+    const calcBtn = document.getElementById('calcBtn');
+    const resultDiv = document.getElementById('result');
+    const ageText = document.getElementById('ageText');
+    const detail = document.getElementById('detail');
+    const nextBirthday = document.getElementById('nextBirthday');
+
+    function showError(msg){
+      resultDiv.style.display = 'block';
+      ageText.textContent = "Error";
+      detail.textContent = msg;
+      nextBirthday.textContent = "";
+    }
+
+    calcBtn.addEventListener('click', function(){
+      const dobStr = dobInput.value && dobInput.value.trim();
+      if (!dobStr) {
+        showError("Please choose your date of birth.");
+        return;
+      }
+
+      const parts = dobStr.split('-');
+      if (parts.length !== 3) {
+        showError("Invalid date format.");
+        return;
+      }
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      if (!y || !m || !d) {
+        showError("Invalid date values.");
+        return;
+      }
+
+      const birth = new Date(y, m-1, d);
+      const age = calculateAgeFromDate(birth);
+      if (age.error) {
+        showError(age.error);
+        return;
+      }
+
+      resultDiv.style.display = 'block';
+      ageText.textContent = `${age.years} year${age.years===1 ? '' : 's'}, ${age.months} month${age.months===1 ? '' : 's'} and ${age.days} day${age.days===1 ? '' : 's'}.`;
+      detail.textContent = `Born on ${birth.toDateString()}.`;
+
+      const nb = nextBirthdayInfo(birth);
+      if (nb.daysAway === 0) {
+        nextBirthday.textContent = "🎉 Happy Birthday! Today is your birthday.";
+      } else {
+        nextBirthday.textContent = `Next birthday: ${nb.nextDate.toDateString()} — ${nb.daysAway} day${nb.daysAway===1 ? '' : 's'} away.`;
+      }
+
+      // Save last used dob to localStorage for convenience
+      try { localStorage.setItem('agecalc_last_dob', dobStr); } catch(e){}
+    });
+
+    // prefill if we have saved dob
+    window.addEventListener('load', function(){
+      try {
+        const saved = localStorage.getItem('agecalc_last_dob');
+        if (saved) dobInput.value = saved;
+      } catch(e){}
+    });
+
+    // Allow Enter key to calculate
+    dobInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') calcBtn.click();
+    });
+  </script>
+</body>
+</html>

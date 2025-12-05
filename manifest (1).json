@@ -1,0 +1,17 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "age_calculator",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "ageCalc",
+  "start_url": "/",
+  "theme_color": "#150101",
+  "categories": [
+    "entertainment",
+    "personalization"
+  ],
+  "id": "ISM3233",
+  "description": "Easily calculate your exact age in years, months, and days. Just enter your date of birth and get instant results. The app also shows your next birthday countdown and works completely offline. Fast, lightweight, and easy to use."
+}

@@ -6,7 +6,7 @@
   "name": "age_calculator",
   "orientation": "any",
   "scope": "/",
-  "short_name": "age_calculator",
+  "short_name": "ageCalc",
   "start_url": "/",
   "theme_color": "#150101",
   "categories": [

@@ -1,22 +1,21 @@
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open("app-cache").then((cache) => {
+self.addEventListener("install", (e) => {
+  e.waitUntil(
+    caches.open("age-calc-cache").then((cache) => {
       return cache.addAll([
-        "./",
-        "./index.html",
-        "./script.js",
-        "./style.css",
-        "./icons/icon-192x192.png",
-        "./icons/icon-512x512.png"
+        "/age-calculator/",
+        "/age-calculator/index.html",
+        "/age-calculator/manifest.json",
+        "/age-calculator/icons/icon-192.png",
+        "/age-calculator/icons/icon-512.png"
       ]);
     })
   );
 });
 
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+self.addEventListener("fetch", (e) => {
+  e.respondWith(
+    caches.match(e.request).then((response) => {
+      return response || fetch(e.request);
     })
   );
 });
